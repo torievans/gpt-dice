@@ -114,11 +114,14 @@ for p in players:
 if totals:
     leader = min(totals, key=totals.get)
 
-cols = st.columns(len(players))
-for i, p in enumerate(players):
-    score = totals.get(p, 0)
-    delta = "⭐ LEADING" if p == leader else ""
-    cols[i].metric(p, score, delta)
+if players:
+    cols = st.columns(len(players))
+    for i, p in enumerate(players):
+        score = totals.get(p, 0)
+        delta = "⭐ LEADING" if p == leader else ""
+        cols[i].metric(p, score, delta)
+else:
+    st.info("Add and select at least one player to start.")
 
 # =========================
 # 6. PLAY MODE
