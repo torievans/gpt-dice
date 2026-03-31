@@ -402,7 +402,7 @@ for i, col in enumerate(cols):
         else:
             st.caption("Select 5 dice for Trick B to choose a category.")
 
-    # =====================================================
+       # =====================================================
     # 6D. CONFIRM TURN
     # =====================================================
     ready_to_confirm = (
@@ -421,7 +421,8 @@ for i, col in enumerate(cols):
 
     if st.button(
         "Confirm Turn",
-        type="primary",
+        key="confirm_turn_btn",
+        type="secondary",
         use_container_width=True,
         disabled=not ready_to_confirm
     ):
