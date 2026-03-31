@@ -176,6 +176,18 @@ st.markdown("""
     font-size: 18px;
     margin-bottom: 6px;
 }
+
+/* Soft grey selected state for A and B buttons */
+button[kind="secondary"][data-testid*="a_"]:active,
+button[kind="secondary"][data-testid*="b_"]:active {
+    background-color: #e5e7eb !important;
+}
+
+button[kind="secondary"][data-testid*="a_"][aria-pressed="true"],
+button[kind="secondary"][data-testid*="b_"][aria-pressed="true"] {
+    background-color: #e5e7eb !important;
+    border-color: #9ca3af !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -263,69 +275,71 @@ if st.session_state.game_active and not st.session_state.game_over:
     st.write(f"**Rolls left:** {st.session_state.rolls_left}")
 
     # =====================================================
-    # 6B. DICE DISPLAY
-    # =====================================================
-    st.markdown("### 🎲 Your Dice")
+# 6B. DICE DISPLAY
+# =====================================================
+st.markdown("### 🎲 Your Dice")
 
-    cols = st.columns(10)
+cols = st.columns(10)
 
-    for i, col in enumerate(cols):
-        val = st.session_state.dice[i]
+for i, col in enumerate(cols):
+    val = st.session_state.dice[i]
 
-        selected_for = None
-        if i in st.session_state.trick_a_indices:
-            selected_for = "A"
-        elif i in st.session_state.trick_b_indices:
-            selected_for = "B"
+    selected_for = None
+    if i in st.session_state.trick_a_indices:
+        selected_for = "A"
+    elif i in st.session_state.trick_b_indices:
+        selected_for = "B"
 
-        with col:
-            st.markdown(render_dice_face(val, selected_for), unsafe_allow_html=True)
+    with col:
+        st.markdown(render_dice_face(val, selected_for), unsafe_allow_html=True)
 
-            subcol1, subcol2 = st.columns(2)
+        subcol1, subcol2 = st.columns(2)
 
-            with subcol1:
-                if st.button(
-                    "A ✓" if selected_for == "A" else "A",
-                    key=f"a_{i}",
-                    use_container_width=True,
-                    type="secondary",
-                    disabled=(
-                        (selected_for != "A" and len(st.session_state.trick_a_indices) >= 5)
-                        or val == 0
-                    ),
-                ):
-                    if i in st.session_state.trick_a_indices:
-                        st.session_state.trick_a_indices.remove(i)
-                    else:
-                        if i in st.session_state.trick_b_indices:
-                            st.session_state.trick_b_indices.remove(i)
-                        st.session_state.trick_a_indices.append(i)
-
-                    if len(st.session_state.trick_a_indices) < 5:
-                        st.session_state.trick_a_category = ""
-                    st.rerun()
-
-            with subcol2:
-                if st.button(
-                    "B ✓" if selected_for == "B" else "B",
-                    key=f"b_{i}",
-                    use_container_width=True,
-                    type="secondary",
-                    disabled=(
-                        (selected_for != "B" and len(st.session_state.trick_b_indices) >= 5)
-                        or val == 0
-                    ),
-                ):
+        # --- A BUTTON ---
+        with subcol1:
+            if st.button(
+                "A",
+                key=f"a_{i}",
+                use_container_width=True,
+                type="secondary",
+                disabled=(
+                    (selected_for != "A" and len(st.session_state.trick_a_indices) >= 5)
+                    or val == 0
+                ),
+            ):
+                if i in st.session_state.trick_a_indices:
+                    st.session_state.trick_a_indices.remove(i)
+                else:
                     if i in st.session_state.trick_b_indices:
                         st.session_state.trick_b_indices.remove(i)
-                    else:
-                        if i in st.session_state.trick_a_indices:
-                            st.session_state.trick_a_indices.remove(i)
-                        st.session_state.trick_b_indices.append(i)
+                    st.session_state.trick_a_indices.append(i)
 
-                    if len(st.session_state.trick_b_indices) < 5:
-                        st.session_state.trick_b_category = ""
-                    st.rerun()
+                if len(st.session_state.trick_a_indices) < 5:
+                    st.session_state.trick_a_category = ""
+                st.rerun()
+
+        # --- B BUTTON ---
+        with subcol2:
+            if st.button(
+                "B",
+                key=f"b_{i}",
+                use_container_width=True,
+                type="secondary",
+                disabled=(
+                    (selected_for != "B" and len(st.session_state.trick_b_indices) >= 5)
+                    or val == 0
+                ),
+            ):
+                if i in st.session_state.trick_b_indices:
+                    st.session_state.trick_b_indices.remove(i)
+                else:
+                    if i in st.session_state.trick_a_indices:
+                        st.session_state.trick_a_indices.remove(i)
+                    st.session_state.trick_b_indices.append(i)
+
+                if len(st.session_state.trick_b_indices) < 5:
+                    st.session_state.trick_b_category = ""
+                st.rerun()
 
     # =====================================================
     # 6C. SELECTION SUMMARY
