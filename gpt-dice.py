@@ -124,6 +124,7 @@ stats = load_data()
 # =========================================================
 st.markdown("""
 <style>
+
 .dice-tile {
     width: 80px;
     height: 80px;
@@ -171,40 +172,7 @@ st.markdown("""
 .dice-slot-8 { grid-column: 2; grid-row: 3; }
 .dice-slot-9 { grid-column: 3; grid-row: 3; }
 
-
-.summary-title {
-    font-weight: 700;
-    font-size: 18px;
-    margin-bottom: 6px;
-}
-
-.legend-row {
-    display: flex;
-    gap: 18px;
-    margin-bottom: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.legend-pill {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 999px;
-    color: white;
-    font-weight: 700;
-    font-size: 14px;
-}
-
-.legend-a {
-    background: #ff4b4b;
-}
-
-.legend-b {
-    background: #1f77b4;
-}
-</style>
-""", unsafe_allow_html=True)
-
+/* 🔵 B button styling */
 button[kind="secondary"][data-testid*="b_"] {
     border-color: #1f77b4 !important;
     color: #1f77b4 !important;
@@ -214,6 +182,9 @@ button[kind="secondary"][data-testid*="b_"]:hover {
     background-color: #1f77b4 !important;
     color: white !important;
 }
+
+</style>
+""", unsafe_allow_html=True)
 
 # =========================================================
 # 4. SESSION STATE
