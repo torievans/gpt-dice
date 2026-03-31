@@ -64,6 +64,10 @@ def render_dice_face(value, selected_for=None):
     }
 
     css_class = "dice-tile"
+
+    if st.session_state.just_rolled:
+        css_class += " dice-roll"
+
     if selected_for == "A":
         css_class += " selected-a"
     elif selected_for == "B":
@@ -135,6 +139,19 @@ st.markdown("""
     grid-template-rows: repeat(3,1fr);
     padding: 6px;
     margin: 0 auto 6px auto;
+    transition: transform 0.15s ease;
+}
+
+@keyframes dice-bounce {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.2) rotate(10deg); }
+    50% { transform: scale(0.9) rotate(-8deg); }
+    75% { transform: scale(1.1) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.dice-roll {
+    animation: dice-bounce 0.35s ease;
 }
 
 .dice-tile.selected-a {
@@ -195,6 +212,7 @@ defaults = {
     "trick_b_indices": [],
     "trick_a_category": "",
     "trick_b_category": "",
+    "just_rolled": False,
 }
 
 for k, v in defaults.items():
@@ -243,7 +261,7 @@ if st.session_state.game_active and not st.session_state.game_over:
     player = st.session_state.players[st.session_state.current_player_idx]
     st.header(f"{player}'s turn")
 
-    # =====================================================
+        # =====================================================
     # 6A. ROLL BUTTON
     # =====================================================
     locked_indices = st.session_state.trick_a_indices + st.session_state.trick_b_indices
@@ -258,6 +276,7 @@ if st.session_state.game_active and not st.session_state.game_over:
             if i not in locked_indices:
                 st.session_state.dice[i] = random.randint(1, 6)
         st.session_state.rolls_left -= 1
+        st.session_state.just_rolled = True
         st.rerun()
 
     st.write(f"**Rolls left:** {st.session_state.rolls_left}")
@@ -327,6 +346,8 @@ if st.session_state.game_active and not st.session_state.game_over:
                         st.session_state.trick_b_category = ""
                     st.rerun()
 
+    st.session_state.just_rolled = False
+    
     # =====================================================
     # 6C. SELECTION SUMMARY
     # =====================================================
