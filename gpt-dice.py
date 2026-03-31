@@ -171,13 +171,6 @@ st.markdown("""
 .dice-slot-8 { grid-column: 2; grid-row: 3; }
 .dice-slot-9 { grid-column: 3; grid-row: 3; }
 
-.summary-box {
-    padding: 16px;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    margin-top: 10px;
-    background: #fafafa;
-}
 
 .summary-title {
     font-weight: 700;
@@ -360,7 +353,7 @@ if st.session_state.game_active and not st.session_state.game_over:
                         st.session_state.trick_b_category = ""
                     st.rerun()
 
-       # =====================================================
+           # =====================================================
     # 6C. SELECTION SUMMARY
     # =====================================================
     trick_a_vals = sorted([st.session_state.dice[i] for i in st.session_state.trick_a_indices])
@@ -369,7 +362,6 @@ if st.session_state.game_active and not st.session_state.game_over:
     summary_col1, summary_col2 = st.columns(2)
 
     with summary_col1:
-        st.markdown('<div class="summary-box">', unsafe_allow_html=True)
         st.markdown('<div class="summary-title">🔴 Trick A</div>', unsafe_allow_html=True)
         st.write(f"Selected: {len(trick_a_vals)}/5")
         st.write(f"Dice: {trick_a_vals if trick_a_vals else []}")
@@ -394,10 +386,7 @@ if st.session_state.game_active and not st.session_state.game_over:
         else:
             st.caption("Select 5 dice for Trick A to choose a category.")
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
     with summary_col2:
-        st.markdown('<div class="summary-box">', unsafe_allow_html=True)
         st.markdown('<div class="summary-title">🔵 Trick B</div>', unsafe_allow_html=True)
         st.write(f"Selected: {len(trick_b_vals)}/5")
         st.write(f"Dice: {trick_b_vals if trick_b_vals else []}")
@@ -421,8 +410,6 @@ if st.session_state.game_active and not st.session_state.game_over:
             )
         else:
             st.caption("Select 5 dice for Trick B to choose a category.")
-
-        st.markdown('</div>', unsafe_allow_html=True)
 
     # =====================================================
     # 6D. CONFIRM TURN
