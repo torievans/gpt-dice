@@ -5,7 +5,9 @@ import os
 import random
 from collections import Counter
 
-# --- SCORE ENGINE ---
+# =========================================================
+# 1. SCORE ENGINE
+# =========================================================
 def calculate_score(dice, category):
     dice.sort()
     counts = Counter(dice)
@@ -24,7 +26,10 @@ def calculate_score(dice, category):
         return "👌" if score == 0 else str(score)
     return "0"
 
-# --- CONFIG ---
+
+# =========================================================
+# 2. CONFIG & DATA
+# =========================================================
 st.set_page_config(page_title="Double Cameroon")
 DB_FILE = "cameroon_stats.json"
 
@@ -40,7 +45,10 @@ def save_data(data):
 
 stats = load_data()
 
-# --- SESSION STATE ---
+
+# =========================================================
+# 3. SESSION STATE
+# =========================================================
 defaults = {
     "game_active": False,
     "game_over": False,
@@ -55,12 +63,18 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# --- SIDEBAR ---
+
+# =========================================================
+# 4. SIDEBAR
+# =========================================================
 with st.sidebar:
     st.title("🎲 Double Cameroon")
     mode = st.radio("Mode", ["Play Dice", "Score Only"])
 
-# --- SETUP ---
+
+# =========================================================
+# 5. GAME SETUP
+# =========================================================
 if not st.session_state.game_active:
     st.title("Start Game")
 
@@ -83,14 +97,24 @@ if not st.session_state.game_active:
         st.session_state.game_active = True
         st.rerun()
 
-# --- GAME ---
+
+# =========================================================
+# 6. GAMEPLAY
+# =========================================================
 if st.session_state.game_active and not st.session_state.game_over:
 
     player = st.session_state.players[st.session_state.current_player_idx]
-    st.header(f"{player}'s turn")
+    st.header(f"👤 {player}'s Turn")
 
-    # --- ROLL ---
-    if st.button("🎲 Roll", disabled=st.session_state.rolls_left == 0):
+    # -----------------------------------------------------
+    # 6A. ROLL BUTTON
+    # -----------------------------------------------------
+    if st.button(
+        "🎲 ROLL DICE",
+        use_container_width=True,
+        type="primary",
+        disabled=st.session_state.rolls_left == 0
+    ):
         for i in range(10):
             if i not in st.session_state.selected:
                 st.session_state.dice[i] = random.randint(1, 6)
@@ -99,28 +123,45 @@ if st.session_state.game_active and not st.session_state.game_over:
 
     st.write(f"Rolls left: {st.session_state.rolls_left}")
 
-    # --- DICE DISPLAY ---
+    # -----------------------------------------------------
+    # 6B. DICE DISPLAY (IMPROVED UI)
+    # -----------------------------------------------------
+    st.markdown("### 🎲 Your Dice")
+
     faces = ["?", "⚀","⚁","⚂","⚃","⚄","⚅"]
+    dice_cols = st.columns(10)
 
-    dice_labels = [
-        f"{faces[d]} ({i})" for i, d in enumerate(st.session_state.dice)
-    ]
+    for i in range(10):
+        val = st.session_state.dice[i]
+        face = faces[val]
+        is_selected = i in st.session_state.selected
 
-    selected = st.multiselect(
-        "Select dice for Trick A (first 5)",
-        range(10),
-        default=st.session_state.selected
-    )
+        with dice_cols[i]:
+            if st.button(
+                face,
+                key=f"dice_{i}",
+                use_container_width=True,
+                type="primary" if is_selected else "secondary"
+            ):
+                if i in st.session_state.selected:
+                    st.session_state.selected.remove(i)
+                else:
+                    if len(st.session_state.selected) < 5:
+                        st.session_state.selected.append(i)
+                st.rerun()
 
-    st.session_state.selected = selected
-
-    trickA = [st.session_state.dice[i] for i in selected[:5]]
-    trickB = [st.session_state.dice[i] for i in range(10) if i not in selected[:5]]
+    # -----------------------------------------------------
+    # 6C. SPLIT INTO TRICKS
+    # -----------------------------------------------------
+    trickA = [st.session_state.dice[i] for i in st.session_state.selected[:5]]
+    trickB = [st.session_state.dice[i] for i in range(10) if i not in st.session_state.selected[:5]]
 
     st.write("**Trick A:**", sorted(trickA))
     st.write("**Trick B:**", sorted(trickB))
 
-    # --- CATEGORY ---
+    # -----------------------------------------------------
+    # 6D. CATEGORY SELECTION
+    # -----------------------------------------------------
     categories = ["1s","2s","3s","4s","5s","6s","Full House","Low Straight","High Straight","5 of a Kind"]
     available = [c for c in categories if c not in st.session_state.used_categories[player]]
 
@@ -128,7 +169,9 @@ if st.session_state.game_active and not st.session_state.game_over:
     catA = col1.selectbox("Category A", [""] + available)
     catB = col2.selectbox("Category B", [""] + [c for c in available if c != catA])
 
-    # --- CONFIRM ---
+    # -----------------------------------------------------
+    # 6E. CONFIRM TURN
+    # -----------------------------------------------------
     if st.button("Confirm Turn"):
 
         def score(cat, vals):
@@ -154,7 +197,10 @@ if st.session_state.game_active and not st.session_state.game_over:
 
         st.rerun()
 
-# --- SCOREBOARD ---
+
+# =========================================================
+# 7. SCOREBOARD
+# =========================================================
 if st.session_state.game_active:
     st.subheader("Scores")
 
