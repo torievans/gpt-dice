@@ -360,16 +360,9 @@ if st.session_state.game_active and not st.session_state.game_over:
                         st.session_state.trick_b_category = ""
                     st.rerun()
 
-    # =====================================================
+       # =====================================================
     # 6C. SELECTION SUMMARY
     # =====================================================
-    st.markdown("""
-    <div class="legend-row">
-        <span class="legend-pill legend-a">Trick A</span>
-        <span class="legend-pill legend-b">Trick B</span>
-    </div>
-    """, unsafe_allow_html=True)
-
     trick_a_vals = sorted([st.session_state.dice[i] for i in st.session_state.trick_a_indices])
     trick_b_vals = sorted([st.session_state.dice[i] for i in st.session_state.trick_b_indices])
 
@@ -377,16 +370,21 @@ if st.session_state.game_active and not st.session_state.game_over:
 
     with summary_col1:
         st.markdown('<div class="summary-box">', unsafe_allow_html=True)
-        st.markdown('<div class="summary-title">Trick A summary</div>', unsafe_allow_html=True)
+        st.markdown('<div class="summary-title">🔴 Trick A</div>', unsafe_allow_html=True)
         st.write(f"Selected: {len(trick_a_vals)}/5")
         st.write(f"Dice: {trick_a_vals if trick_a_vals else []}")
 
         available_a = get_available_categories(player)
-        available_b_current = st.session_state.trick_b_category
+        selected_b_current = st.session_state.trick_b_category
 
         if len(trick_a_vals) == 5:
-            a_options = [""] + [c for c in available_a if c != available_b_current]
-            current_a = st.session_state.trick_a_category if st.session_state.trick_a_category in a_options else ""
+            a_options = [""] + [c for c in available_a if c != selected_b_current]
+            current_a = (
+                st.session_state.trick_a_category
+                if st.session_state.trick_a_category in a_options
+                else ""
+            )
+
             st.session_state.trick_a_category = st.selectbox(
                 "Choose category for Trick A",
                 a_options,
@@ -395,11 +393,12 @@ if st.session_state.game_active and not st.session_state.game_over:
             )
         else:
             st.caption("Select 5 dice for Trick A to choose a category.")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     with summary_col2:
         st.markdown('<div class="summary-box">', unsafe_allow_html=True)
-        st.markdown('<div class="summary-title">Trick B summary</div>', unsafe_allow_html=True)
+        st.markdown('<div class="summary-title">🔵 Trick B</div>', unsafe_allow_html=True)
         st.write(f"Selected: {len(trick_b_vals)}/5")
         st.write(f"Dice: {trick_b_vals if trick_b_vals else []}")
 
@@ -408,7 +407,12 @@ if st.session_state.game_active and not st.session_state.game_over:
 
         if len(trick_b_vals) == 5:
             b_options = [""] + [c for c in available_b if c != selected_a_current]
-            current_b = st.session_state.trick_b_category if st.session_state.trick_b_category in b_options else ""
+            current_b = (
+                st.session_state.trick_b_category
+                if st.session_state.trick_b_category in b_options
+                else ""
+            )
+
             st.session_state.trick_b_category = st.selectbox(
                 "Choose category for Trick B",
                 b_options,
@@ -417,6 +421,7 @@ if st.session_state.game_active and not st.session_state.game_over:
             )
         else:
             st.caption("Select 5 dice for Trick B to choose a category.")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     # =====================================================
