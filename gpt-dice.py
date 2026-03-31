@@ -1,208 +1,171 @@
 import streamlit as st
+import pandas as pd
 import json
 import os
+import random
 from collections import Counter
 
-# =========================
-# 0. SYNC FUNCTION (CRUCIAL)
-# =========================
-def sync_manual_scores():
-    if "main_table" in st.session_state:
-        for player, scores in st.session_state.main_table.items():
-            if player not in st.session_state.master_scores:
-                st.session_state.master_scores[player] = {}
-            st.session_state.master_scores[player].update(scores)
-
-# Run sync BEFORE anything else
-if "master_scores" not in st.session_state:
-    st.session_state.master_scores = {}
-if "used_categories" not in st.session_state:
-    st.session_state.used_categories = {}
-if "player_profiles" not in st.session_state:
-    st.session_state.player_profiles = []
-
-sync_manual_scores()
-
-# =========================
-# 1. SCORING ENGINE
-# =========================
+# --- SCORE ENGINE ---
 def calculate_score(dice, category):
+    dice.sort()
     counts = Counter(dice)
-
-    if category in ["1s", "2s", "3s", "4s", "5s", "6s"]:
-        target = int(category[0])
-        count = counts[target]
-        return (5 - count) * target
-
+    target_map = {"1s": 1, "2s": 2, "3s": 3, "4s": 4, "5s": 5, "6s": 6}
+    
+    if category in target_map:
+        target = target_map[category]
+        score = sum(1 for d in dice if d != target) * target
+        return "👌" if score == 0 else str(score)
+    
     if category == "Full House":
-        if sorted(counts.values()) == [2, 3]:
-            triple = max(counts, key=lambda x: counts[x] if counts[x] == 3 else 0)
-            pair = max(counts, key=lambda x: counts[x] if counts[x] == 2 else 0)
-            return ((6 - triple) * 3) + ((5 - pair) * 2)
-        return 28
+        sorted_items = sorted(counts.items(), key=lambda x: (x[1], x[0]), reverse=True)
+        three_val = sorted_items[0][0]
+        two_val = sorted_items[1][0] if len(sorted_items) > 1 else three_val
+        score = ((6 - three_val) * 3) + ((5 - two_val) * 2)
+        return "👌" if score == 0 else str(score)
+    return "0"
 
-    if category == "Low Straight":
-        return 0 if sorted(dice) == [1,2,3,4,5] else 15
+# --- CONFIG ---
+st.set_page_config(page_title="Double Cameroon")
+DB_FILE = "cameroon_stats.json"
 
-    if category == "High Straight":
-        return 0 if sorted(dice) == [2,3,4,5,6] else 20
-
-    if category == "5 of a Kind":
-        if len(counts) == 1:
-            val = dice[0]
-            return (6 - val) * 5
-        return 30
-
-    return 0
-
-# =========================
-# 2. PLAYER PROFILE STORAGE
-# =========================
-PROFILE_FILE = "cameroon_stats.json"
-
-def load_profiles():
-    if os.path.exists(PROFILE_FILE):
-        with open(PROFILE_FILE, "r") as f:
+def load_data():
+    if os.path.exists(DB_FILE):
+        with open(DB_FILE, "r") as f:
             return json.load(f)
-    return []
+    return {"Players": {}}
 
+def save_data(data):
+    with open(DB_FILE, "w") as f:
+        json.dump(data, f, indent=4)
 
-def save_profiles(profiles):
-    with open(PROFILE_FILE, "w") as f:
-        json.dump(profiles, f)
+stats = load_data()
 
-# =========================
-# 3. UI SETUP
-# =========================
-st.set_page_config(page_title="Double Cameroon", layout="wide")
+# --- SESSION STATE ---
+defaults = {
+    "game_active": False,
+    "game_over": False,
+    "dice": [0]*10,
+    "selected": [],
+    "rolls_left": 3,
+    "current_player_idx": 0,
+    "used_categories": {}
+}
 
-st.title("🎲 Double Cameroon Digital Engine & Scorecard")
+for k, v in defaults.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
 
-mode = st.sidebar.selectbox("Select Mode", ["Play Dice", "Score Only"])
+# --- SIDEBAR ---
+with st.sidebar:
+    st.title("🎲 Double Cameroon")
+    mode = st.radio("Mode", ["Play Dice", "Score Only"])
 
-# =========================
-# 4. PLAYER SETUP
-# =========================
-profiles = load_profiles()
+# --- SETUP ---
+if not st.session_state.game_active:
+    st.title("Start Game")
 
-new_player = st.sidebar.text_input("Add Player")
-if st.sidebar.button("Add") and new_player:
-    profiles.append(new_player)
-    save_profiles(profiles)
+    players = st.multiselect("Select players", list(stats["Players"].keys()))
+    new_player = st.text_input("Add new player")
 
-players = st.sidebar.multiselect("Select Players", profiles)
+    if st.button("Add Player") and new_player:
+        stats["Players"][new_player] = {}
+        save_data(stats)
+        st.rerun()
 
-for p in players:
-    if p not in st.session_state.master_scores:
-        st.session_state.master_scores[p] = {}
+    if st.button("Start") and players:
+        st.session_state.players = players
+        st.session_state.master_scores = pd.DataFrame(
+            "",
+            index=["1s","2s","3s","4s","5s","6s","Full House","Low Straight","High Straight","5 of a Kind"],
+            columns=players
+        )
+        st.session_state.used_categories = {p: [] for p in players}
+        st.session_state.game_active = True
+        st.rerun()
 
-categories = [
-    "1s","2s","3s","4s","5s","6s",
-    "Full House","Low Straight","High Straight","5 of a Kind"
-]
+# --- GAME ---
+if st.session_state.game_active and not st.session_state.game_over:
 
-# =========================
-# 5. SCOREBOARD HEADER
-# =========================
-st.subheader("Score (Lowest Wins!)")
+    player = st.session_state.players[st.session_state.current_player_idx]
+    st.header(f"{player}'s turn")
 
-totals = {}
-for p in players:
-    total = sum(st.session_state.master_scores[p].values())
-    totals[p] = total
+    # --- ROLL ---
+    if st.button("🎲 Roll", disabled=st.session_state.rolls_left == 0):
+        for i in range(10):
+            if i not in st.session_state.selected:
+                st.session_state.dice[i] = random.randint(1, 6)
+        st.session_state.rolls_left -= 1
+        st.rerun()
 
-if totals:
-    leader = min(totals, key=totals.get)
+    st.write(f"Rolls left: {st.session_state.rolls_left}")
 
-if players:
-    cols = st.columns(len(players))
-    for i, p in enumerate(players):
-        score = totals.get(p, 0)
-        delta = "⭐ LEADING" if p == leader else ""
-        cols[i].metric(p, score, delta)
-else:
-    st.info("Add and select at least one player to start.")
+    # --- DICE DISPLAY ---
+    faces = ["?", "⚀","⚁","⚂","⚃","⚄","⚅"]
 
-# =========================
-# 6. PLAY MODE
-# =========================
-if mode == "Play Dice":
-    import random
+    dice_labels = [
+        f"{faces[d]} ({i})" for i, d in enumerate(st.session_state.dice)
+    ]
 
-    st.header("Play Dice")
+    selected = st.multiselect(
+        "Select dice for Trick A (first 5)",
+        range(10),
+        default=st.session_state.selected
+    )
 
-    if "dice" not in st.session_state:
-        st.session_state.dice = [random.randint(1,6) for _ in range(10)]
-        st.session_state.rolls = 0
+    st.session_state.selected = selected
 
-    if st.button("Roll Dice") and st.session_state.rolls < 3:
-        st.session_state.dice = [random.randint(1,6) for _ in range(10)]
-        st.session_state.rolls += 1
+    trickA = [st.session_state.dice[i] for i in selected[:5]]
+    trickB = [st.session_state.dice[i] for i in range(10) if i not in selected[:5]]
 
-    st.write("Rolls used:", st.session_state.rolls)
-    st.write("Dice:", st.session_state.dice)
+    st.write("**Trick A:**", sorted(trickA))
+    st.write("**Trick B:**", sorted(trickB))
 
-    st.subheader("Assign Dice to Tricks")
-    trick_a = st.multiselect("Trick A (5 dice)", st.session_state.dice, max_selections=5)
-    trick_b = st.multiselect("Trick B (5 dice)", st.session_state.dice, max_selections=5)
+    # --- CATEGORY ---
+    categories = ["1s","2s","3s","4s","5s","6s","Full House","Low Straight","High Straight","5 of a Kind"]
+    available = [c for c in categories if c not in st.session_state.used_categories[player]]
 
-    if len(trick_a) == 5 and len(trick_b) == 5:
-        cat_a = st.selectbox("Category for Trick A", categories, key="catA")
-        cat_b = st.selectbox("Category for Trick B", categories, key="catB")
+    col1, col2 = st.columns(2)
+    catA = col1.selectbox("Category A", [""] + available)
+    catB = col2.selectbox("Category B", [""] + [c for c in available if c != catA])
 
-        player = st.selectbox("Player", players)
+    # --- CONFIRM ---
+    if st.button("Confirm Turn"):
 
-        if st.button("Submit Scores"):
-            score_a = calculate_score(trick_a, cat_a)
-            score_b = calculate_score(trick_b, cat_b)
+        def score(cat, vals):
+            if cat == "Low Straight":
+                return "👌" if sorted(vals) == [1,2,3,4,5] else "25"
+            if cat == "High Straight":
+                return "👌" if sorted(vals) == [2,3,4,5,6] else "30"
+            if cat == "5 of a Kind":
+                return "👌" if len(set(vals)) == 1 else "30"
+            return calculate_score(vals, cat)
 
-            st.session_state.master_scores[player][cat_a] = score_a
-            st.session_state.master_scores[player][cat_b] = score_b
+        st.session_state.master_scores.at[catA, player] = score(catA, trickA)
+        st.session_state.master_scores.at[catB, player] = score(catB, trickB)
 
-            st.success("Scores recorded!")
+        st.session_state.used_categories[player] += [catA, catB]
+        st.session_state.selected = []
+        st.session_state.rolls_left = 3
+        st.session_state.dice = [0]*10
 
-# =========================
-# 7. SCORE ONLY MODE
-# =========================
-if mode == "Score Only":
-    st.header("Manual Score Entry")
+        st.session_state.current_player_idx = (
+            st.session_state.current_player_idx + 1
+        ) % len(st.session_state.players)
 
-    if "main_table" not in st.session_state:
-        st.session_state.main_table = {
-            p: {c: "" for c in categories} for p in players
-        }
+        st.rerun()
 
-    for p in players:
-        st.subheader(p)
-        for c in categories:
-            val = st.text_input(f"{p} - {c}", key=f"{p}_{c}")
-            if val:
-                try:
-                    st.session_state.main_table[p][c] = int(val)
-                except:
-                    pass
+# --- SCOREBOARD ---
+if st.session_state.game_active:
+    st.subheader("Scores")
 
-# =========================
-# 8. DISPLAY SCORE TABLE
-# =========================
-st.header("Score Table")
+    totals = {
+        p: st.session_state.master_scores[p].apply(
+            lambda x: int(x) if str(x).isdigit() else 0
+        ).sum()
+        for p in st.session_state.players
+    }
 
-for p in players:
-    st.subheader(p)
-    for c in categories:
-        val = st.session_state.master_scores[p].get(c, "")
-        display = "👌" if val == 0 else val
-        st.write(f"{c}: {display}")
+    for p, score in totals.items():
+        st.metric(p, score)
 
-# =========================
-# 9. WIN CONDITION
-# =========================
-complete = all(
-    len(st.session_state.master_scores[p]) == len(categories)
-    for p in players
-) if players else False
-
-if complete:
-    winner = min(totals, key=totals.get)
-    st.balloons()
-    st.markdown(f"## 🔴 WINNER: {winner} 🔴")
+    st.dataframe(st.session_state.master_scores)
