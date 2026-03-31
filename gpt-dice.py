@@ -205,6 +205,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+button[kind="secondary"][data-testid*="b_"] {
+    border-color: #1f77b4 !important;
+    color: #1f77b4 !important;
+}
+
+button[kind="secondary"][data-testid*="b_"]:hover {
+    background-color: #1f77b4 !important;
+    color: white !important;
+}
+
 # =========================================================
 # 4. SESSION STATE
 # =========================================================
@@ -309,6 +319,7 @@ if st.session_state.game_active and not st.session_state.game_over:
 
             subcol1, subcol2 = st.columns(2)
 
+            # ---------- A BUTTON (RED) ----------
             with subcol1:
                 if st.button(
                     "A",
@@ -331,12 +342,13 @@ if st.session_state.game_active and not st.session_state.game_over:
                         st.session_state.trick_a_category = ""
                     st.rerun()
 
+            # ---------- B BUTTON (BLUE FIX) ----------
             with subcol2:
                 if st.button(
                     "B",
                     key=f"b_{i}",
                     use_container_width=True,
-                    type="primary" if selected_for == "B" else "secondary",
+                    type="secondary",  # always secondary
                     disabled=(
                         (selected_for != "B" and len(st.session_state.trick_b_indices) >= 5)
                         or val == 0
