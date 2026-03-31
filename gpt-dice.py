@@ -171,36 +171,10 @@ st.markdown("""
 .dice-slot-8 { grid-column: 2; grid-row: 3; }
 .dice-slot-9 { grid-column: 3; grid-row: 3; }
 
-
 .summary-title {
     font-weight: 700;
     font-size: 18px;
     margin-bottom: 6px;
-}
-
-.legend-row {
-    display: flex;
-    gap: 18px;
-    margin-bottom: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.legend-pill {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 999px;
-    color: white;
-    font-weight: 700;
-    font-size: 14px;
-}
-
-.legend-a {
-    background: #ff4b4b;
-}
-
-.legend-b {
-    background: #1f77b4;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -311,10 +285,10 @@ if st.session_state.game_active and not st.session_state.game_over:
 
             with subcol1:
                 if st.button(
-                    "A",
+                    "A ✓" if selected_for == "A" else "A",
                     key=f"a_{i}",
                     use_container_width=True,
-                    type="primary" if selected_for == "A" else "secondary",
+                    type="secondary",
                     disabled=(
                         (selected_for != "A" and len(st.session_state.trick_a_indices) >= 5)
                         or val == 0
@@ -333,10 +307,10 @@ if st.session_state.game_active and not st.session_state.game_over:
 
             with subcol2:
                 if st.button(
-                    "B",
+                    "B ✓" if selected_for == "B" else "B",
                     key=f"b_{i}",
                     use_container_width=True,
-                    type="primary" if selected_for == "B" else "secondary",
+                    type="secondary",
                     disabled=(
                         (selected_for != "B" and len(st.session_state.trick_b_indices) >= 5)
                         or val == 0
@@ -356,8 +330,14 @@ if st.session_state.game_active and not st.session_state.game_over:
     # =====================================================
     # 6C. SELECTION SUMMARY
     # =====================================================
-    trick_a_vals = sorted([st.session_state.dice[i] for i in st.session_state.trick_a_indices])
-    trick_b_vals = sorted([st.session_state.dice[i] for i in st.session_state.trick_b_indices])
+    trick_a_vals = sorted(
+        [st.session_state.dice[i] for i in st.session_state.trick_a_indices],
+        reverse=True
+    )
+    trick_b_vals = sorted(
+        [st.session_state.dice[i] for i in st.session_state.trick_b_indices],
+        reverse=True
+    )
 
     summary_col1, summary_col2 = st.columns(2)
 
@@ -430,6 +410,7 @@ if st.session_state.game_active and not st.session_state.game_over:
 
     if st.button(
         "Confirm Turn",
+        key="confirm_turn_btn",
         type="primary",
         use_container_width=True,
         disabled=not ready_to_confirm
