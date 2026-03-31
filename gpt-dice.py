@@ -172,17 +172,25 @@ st.markdown("""
 .dice-slot-8 { grid-column: 2; grid-row: 3; }
 .dice-slot-9 { grid-column: 3; grid-row: 3; }
 
-/* 🔵 B button styling */
-button[kind="secondary"][data-testid*="b_"] {
-    border-color: #1f77b4 !important;
-    color: #1f77b4 !important;
+.summary-title {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 6px;
 }
 
-button[kind="secondary"][data-testid*="b_"]:hover {
+/* A buttons */
+div[data-testid="stButton"] > button[kind="primary"] {
+    background-color: #ff4b4b;
+    border-color: #ff4b4b;
+    color: white;
+}
+
+/* B buttons when selected */
+div[data-testid="stButton"] > button[kind="secondary"].selected-b-button {
     background-color: #1f77b4 !important;
+    border-color: #1f77b4 !important;
     color: white !important;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -269,7 +277,7 @@ if st.session_state.game_active and not st.session_state.game_over:
 
     st.write(f"**Rolls left:** {st.session_state.rolls_left}")
 
-    # =====================================================
+       # =====================================================
     # 6B. DICE DISPLAY
     # =====================================================
     st.markdown("### 🎲 Your Dice")
@@ -290,7 +298,6 @@ if st.session_state.game_active and not st.session_state.game_over:
 
             subcol1, subcol2 = st.columns(2)
 
-            # ---------- A BUTTON (RED) ----------
             with subcol1:
                 if st.button(
                     "A",
@@ -313,13 +320,14 @@ if st.session_state.game_active and not st.session_state.game_over:
                         st.session_state.trick_a_category = ""
                     st.rerun()
 
-            # ---------- B BUTTON (BLUE FIX) ----------
             with subcol2:
+                b_label = "🔵 B" if selected_for == "B" else "B"
+
                 if st.button(
-                    "B",
+                    b_label,
                     key=f"b_{i}",
                     use_container_width=True,
-                    type="secondary",  # always secondary
+                    type="primary" if selected_for == "B" else "secondary",
                     disabled=(
                         (selected_for != "B" and len(st.session_state.trick_b_indices) >= 5)
                         or val == 0
@@ -335,7 +343,7 @@ if st.session_state.game_active and not st.session_state.game_over:
                     if len(st.session_state.trick_b_indices) < 5:
                         st.session_state.trick_b_category = ""
                     st.rerun()
-
+                    
            # =====================================================
     # 6C. SELECTION SUMMARY
     # =====================================================
