@@ -95,6 +95,14 @@ def get_available_categories(player):
     return [c for c in get_categories() if c not in st.session_state.used_categories[player]]
 
 
+def sync_used_categories():
+    for p in st.session_state.players:
+        st.session_state.used_categories[p] = [
+            cat for cat in st.session_state.master_scores.index
+            if str(st.session_state.master_scores.at[cat, p]).strip() != ""
+        ]
+
+
 # =========================================================
 # 2. CONFIG & DATA
 # =========================================================
@@ -195,6 +203,8 @@ defaults = {
     "trick_b_indices": [],
     "trick_a_category": "",
     "trick_b_category": "",
+    "game_mode": "Play Dice",
+    "celebration_done": False,
 }
 
 for k, v in defaults.items():
@@ -234,220 +244,246 @@ if not st.session_state.game_active and not st.session_state.game_over:
         st.session_state.trick_b_indices = []
         st.session_state.trick_a_category = ""
         st.session_state.trick_b_category = ""
+        st.session_state.celebration_done = False
         st.rerun()
+
+# =========================================================
+# 5.5 GAME MODE SELECTOR
+# =========================================================
+with st.sidebar:
+    st.header("⚙️ Settings")
+    st.session_state.game_mode = st.radio(
+        "Game Mode",
+        ["Play Dice", "Score Only"],
+        index=0 if st.session_state.game_mode == "Play Dice" else 1
+    )
 
 # =========================================================
 # 6. GAMEPLAY
 # =========================================================
 if st.session_state.game_active and not st.session_state.game_over:
     player = st.session_state.players[st.session_state.current_player_idx]
-    st.header(f"{player}'s turn")
 
-    # =====================================================
-    # 6A. ROLL BUTTON
-    # =====================================================
-    locked_indices = st.session_state.trick_a_indices + st.session_state.trick_b_indices
+    if st.session_state.game_mode == "Play Dice":
+        st.header(f"{player}'s turn")
 
-    if st.button(
-        "🎲 ROLL DICE",
-        key="roll_dice_btn",
-        use_container_width=True,
-        type="primary",
-        disabled=st.session_state.rolls_left <= 0
-    ):
-        if st.session_state.rolls_left > 0:
-            for i in range(10):
-                if i not in locked_indices:
-                    st.session_state.dice[i] = random.randint(1, 6)
+        # =====================================================
+        # 6A. ROLL BUTTON
+        # =====================================================
+        locked_indices = st.session_state.trick_a_indices + st.session_state.trick_b_indices
 
-            st.session_state.rolls_left -= 1
-            st.rerun()
+        if st.button(
+            "🎲 ROLL DICE",
+            key="roll_dice_btn",
+            use_container_width=True,
+            type="primary",
+            disabled=st.session_state.rolls_left <= 0
+        ):
+            if st.session_state.rolls_left > 0:
+                for i in range(10):
+                    if i not in locked_indices:
+                        st.session_state.dice[i] = random.randint(1, 6)
 
-    st.write(f"**Rolls left:** {max(0, st.session_state.rolls_left)}")
+                st.session_state.rolls_left -= 1
+                st.rerun()
 
-    # =====================================================
-    # 6B. DICE DISPLAY
-    # =====================================================
-    st.markdown("### 🎲 Your Dice")
+        st.write(f"**Rolls left:** {max(0, st.session_state.rolls_left)}")
 
-    cols = st.columns(10)
+        # =====================================================
+        # 6B. DICE DISPLAY
+        # =====================================================
+        st.markdown("### 🎲 Your Dice")
 
-    for i, col in enumerate(cols):
-        val = st.session_state.dice[i]
+        cols = st.columns(10)
 
-        selected_for = None
-        if i in st.session_state.trick_a_indices:
-            selected_for = "A"
-        elif i in st.session_state.trick_b_indices:
-            selected_for = "B"
+        for i, col in enumerate(cols):
+            val = st.session_state.dice[i]
 
-        with col:
-            st.markdown(render_dice_face(val, selected_for), unsafe_allow_html=True)
+            selected_for = None
+            if i in st.session_state.trick_a_indices:
+                selected_for = "A"
+            elif i in st.session_state.trick_b_indices:
+                selected_for = "B"
 
-            subcol1, subcol2 = st.columns(2)
+            with col:
+                st.markdown(render_dice_face(val, selected_for), unsafe_allow_html=True)
 
-            with subcol1:
-                if st.button(
-                    "A",
-                    key=f"a_{i}",
-                    use_container_width=True,
-                    type="secondary",
-                    disabled=(
-                        (selected_for != "A" and len(st.session_state.trick_a_indices) >= 5)
-                        or val == 0
-                    ),
-                ):
-                    if i in st.session_state.trick_a_indices:
-                        st.session_state.trick_a_indices.remove(i)
-                    else:
-                        if i in st.session_state.trick_b_indices:
-                            st.session_state.trick_b_indices.remove(i)
-                        st.session_state.trick_a_indices.append(i)
+                subcol1, subcol2 = st.columns(2)
 
-                    if len(st.session_state.trick_a_indices) < 5:
-                        st.session_state.trick_a_category = ""
-                    st.rerun()
-
-            with subcol2:
-                if st.button(
-                    "B",
-                    key=f"b_{i}",
-                    use_container_width=True,
-                    type="secondary",
-                    disabled=(
-                        (selected_for != "B" and len(st.session_state.trick_b_indices) >= 5)
-                        or val == 0
-                    ),
-                ):
-                    if i in st.session_state.trick_b_indices:
-                        st.session_state.trick_b_indices.remove(i)
-                    else:
+                with subcol1:
+                    if st.button(
+                        "A",
+                        key=f"a_{i}",
+                        use_container_width=True,
+                        type="secondary",
+                        disabled=(
+                            (selected_for != "A" and len(st.session_state.trick_a_indices) >= 5)
+                            or val == 0
+                        ),
+                    ):
                         if i in st.session_state.trick_a_indices:
                             st.session_state.trick_a_indices.remove(i)
-                        st.session_state.trick_b_indices.append(i)
+                        else:
+                            if i in st.session_state.trick_b_indices:
+                                st.session_state.trick_b_indices.remove(i)
+                            st.session_state.trick_a_indices.append(i)
 
-                    if len(st.session_state.trick_b_indices) < 5:
-                        st.session_state.trick_b_category = ""
-                    st.rerun()
+                        if len(st.session_state.trick_a_indices) < 5:
+                            st.session_state.trick_a_category = ""
+                        st.rerun()
 
-    # =====================================================
-    # 6C. SELECTION SUMMARY
-    # =====================================================
-    trick_a_vals = sorted(
-        [st.session_state.dice[i] for i in st.session_state.trick_a_indices],
-        reverse=True
-    )
-    trick_b_vals = sorted(
-        [st.session_state.dice[i] for i in st.session_state.trick_b_indices],
-        reverse=True
-    )
+                with subcol2:
+                    if st.button(
+                        "B",
+                        key=f"b_{i}",
+                        use_container_width=True,
+                        type="secondary",
+                        disabled=(
+                            (selected_for != "B" and len(st.session_state.trick_b_indices) >= 5)
+                            or val == 0
+                        ),
+                    ):
+                        if i in st.session_state.trick_b_indices:
+                            st.session_state.trick_b_indices.remove(i)
+                        else:
+                            if i in st.session_state.trick_a_indices:
+                                st.session_state.trick_a_indices.remove(i)
+                            st.session_state.trick_b_indices.append(i)
 
-    summary_col1, summary_col2 = st.columns(2)
+                        if len(st.session_state.trick_b_indices) < 5:
+                            st.session_state.trick_b_category = ""
+                        st.rerun()
 
-    with summary_col1:
-        st.markdown('<div class="summary-title">🔴 Trick A</div>', unsafe_allow_html=True)
-        st.write(f"Selected: {len(trick_a_vals)}/5")
-        st.write(f"Dice: {trick_a_vals if trick_a_vals else []}")
+        # =====================================================
+        # 6C. SELECTION SUMMARY
+        # =====================================================
+        trick_a_vals = sorted(
+            [st.session_state.dice[i] for i in st.session_state.trick_a_indices],
+            reverse=True
+        )
+        trick_b_vals = sorted(
+            [st.session_state.dice[i] for i in st.session_state.trick_b_indices],
+            reverse=True
+        )
 
-        available_a = get_available_categories(player)
-        selected_b_current = st.session_state.trick_b_category
+        summary_col1, summary_col2 = st.columns(2)
 
-        if len(trick_a_vals) == 5:
-            a_options = [""] + [c for c in available_a if c != selected_b_current]
-            current_a = (
-                st.session_state.trick_a_category
-                if st.session_state.trick_a_category in a_options
-                else ""
-            )
+        with summary_col1:
+            st.markdown('<div class="summary-title">🔴 Trick A</div>', unsafe_allow_html=True)
+            st.write(f"Selected: {len(trick_a_vals)}/5")
+            st.write(f"Dice: {trick_a_vals if trick_a_vals else []}")
 
-            st.session_state.trick_a_category = st.selectbox(
-                "Choose category for Trick A",
-                a_options,
-                index=a_options.index(current_a) if current_a in a_options else 0,
-                key="trick_a_dropdown",
-            )
+            available_a = get_available_categories(player)
+            selected_b_current = st.session_state.trick_b_category
+
+            if len(trick_a_vals) == 5:
+                a_options = [""] + [c for c in available_a if c != selected_b_current]
+                current_a = (
+                    st.session_state.trick_a_category
+                    if st.session_state.trick_a_category in a_options
+                    else ""
+                )
+
+                st.session_state.trick_a_category = st.selectbox(
+                    "Choose category for Trick A",
+                    a_options,
+                    index=a_options.index(current_a) if current_a in a_options else 0,
+                    key="trick_a_dropdown",
+                )
+            else:
+                st.caption("Select 5 dice for Trick A to choose a category.")
+
+        with summary_col2:
+            st.markdown('<div class="summary-title">🔵 Trick B</div>', unsafe_allow_html=True)
+            st.write(f"Selected: {len(trick_b_vals)}/5")
+            st.write(f"Dice: {trick_b_vals if trick_b_vals else []}")
+
+            available_b = get_available_categories(player)
+            selected_a_current = st.session_state.trick_a_category
+
+            if len(trick_b_vals) == 5:
+                b_options = [""] + [c for c in available_b if c != selected_a_current]
+                current_b = (
+                    st.session_state.trick_b_category
+                    if st.session_state.trick_b_category in b_options
+                    else ""
+                )
+
+                st.session_state.trick_b_category = st.selectbox(
+                    "Choose category for Trick B",
+                    b_options,
+                    index=b_options.index(current_b) if current_b in b_options else 0,
+                    key="trick_b_dropdown",
+                )
+            else:
+                st.caption("Select 5 dice for Trick B to choose a category.")
+
+        # =====================================================
+        # 6D. CONFIRM TURN
+        # =====================================================
+        if len(trick_a_vals) < 5 or len(trick_b_vals) < 5:
+            confirm_label = "Select 5 dice for Trick A and Trick B"
+            ready = False
+        elif (
+            st.session_state.trick_a_category == ""
+            or st.session_state.trick_b_category == ""
+        ):
+            confirm_label = "Choose categories for both tricks"
+            ready = False
+        elif st.session_state.trick_a_category == st.session_state.trick_b_category:
+            confirm_label = "Choose different categories"
+            ready = False
         else:
-            st.caption("Select 5 dice for Trick A to choose a category.")
+            confirm_label = "✅ Confirm Turn"
+            ready = True
 
-    with summary_col2:
-        st.markdown('<div class="summary-title">🔵 Trick B</div>', unsafe_allow_html=True)
-        st.write(f"Selected: {len(trick_b_vals)}/5")
-        st.write(f"Dice: {trick_b_vals if trick_b_vals else []}")
+        if st.button(
+            confirm_label,
+            key="confirm_turn_btn",
+            type="primary",
+            use_container_width=True,
+            disabled=not ready
+        ):
+            cat_a = st.session_state.trick_a_category
+            cat_b = st.session_state.trick_b_category
 
-        available_b = get_available_categories(player)
-        selected_a_current = st.session_state.trick_a_category
+            st.session_state.master_scores.at[cat_a, player] = score_category(cat_a, trick_a_vals)
+            st.session_state.master_scores.at[cat_b, player] = score_category(cat_b, trick_b_vals)
 
-        if len(trick_b_vals) == 5:
-            b_options = [""] + [c for c in available_b if c != selected_a_current]
-            current_b = (
-                st.session_state.trick_b_category
-                if st.session_state.trick_b_category in b_options
-                else ""
-            )
+            st.session_state.used_categories[player] += [cat_a, cat_b]
+            st.session_state.dice = [0] * 10
+            st.session_state.rolls_left = 3
+            st.session_state.trick_a_indices = []
+            st.session_state.trick_b_indices = []
+            st.session_state.trick_a_category = ""
+            st.session_state.trick_b_category = ""
 
-            st.session_state.trick_b_category = st.selectbox(
-                "Choose category for Trick B",
-                b_options,
-                index=b_options.index(current_b) if current_b in b_options else 0,
-                key="trick_b_dropdown",
-            )
-        else:
-            st.caption("Select 5 dice for Trick B to choose a category.")
+            st.session_state.current_player_idx = (
+                st.session_state.current_player_idx + 1
+            ) % len(st.session_state.players)
 
-    # =====================================================
-    # 6D. CONFIRM TURN
-    # =====================================================
-    ready_to_confirm = (
-        len(trick_a_vals) == 5
-        and len(trick_b_vals) == 5
-        and st.session_state.trick_a_category != ""
-        and st.session_state.trick_b_category != ""
-        and st.session_state.trick_a_category != st.session_state.trick_b_category
-    )
+            st.rerun()
 
-    # --- Dynamic button text ---
-    if len(trick_a_vals) < 5 or len(trick_b_vals) < 5:
-        confirm_label = "Select 5 dice for Trick A and Trick B"
-        ready = False
-    elif (
-        st.session_state.trick_a_category == ""
-        or st.session_state.trick_b_category == ""
-    ):
-        confirm_label = "Choose categories for both tricks"
-        ready = False
-    elif st.session_state.trick_a_category == st.session_state.trick_b_category:
-        confirm_label = "Choose different categories"
-        ready = False
     else:
-        confirm_label = "✅ Confirm Turn"
-        ready = True
+        st.header("📝 Score Entry Mode")
 
-    if st.button(
-        confirm_label,
-        key="confirm_turn_btn",
-        type="primary",
-        use_container_width=True,
-        disabled=not ready
-    ):
-        cat_a = st.session_state.trick_a_category
-        cat_b = st.session_state.trick_b_category
+        st.info("""
+Enter scores manually when playing with physical dice.
 
-        st.session_state.master_scores.at[cat_a, player] = score_category(cat_a, trick_a_vals)
-        st.session_state.master_scores.at[cat_b, player] = score_category(cat_b, trick_b_vals)
+Penalty values:
+- Full House: 28  
+- Low Straight: 25  
+- High Straight: 30  
+- 5 of a Kind: 30
+""")
 
-        st.session_state.used_categories[player] += [cat_a, cat_b]
-        st.session_state.dice = [0] * 10
-        st.session_state.rolls_left = 3
-        st.session_state.trick_a_indices = []
-        st.session_state.trick_b_indices = []
-        st.session_state.trick_a_category = ""
-        st.session_state.trick_b_category = ""
-
-        st.session_state.current_player_idx = (
-            st.session_state.current_player_idx + 1
-        ) % len(st.session_state.players)
-
-        st.rerun()
+        edited_df = st.data_editor(
+            st.session_state.master_scores,
+            use_container_width=True,
+            key="manual_table"
+        )
+        st.session_state.master_scores = edited_df
+        sync_used_categories()
 
 # =========================================================
 # 7. SCOREBOARD
@@ -481,7 +517,6 @@ if st.session_state.game_active or st.session_state.game_over:
 # =========================================================
 if st.session_state.game_active and not st.session_state.game_over:
     if st.button("🧪 End Game (Test Winner Screen)", use_container_width=True):
-        # Fake some scores so winner logic works
         for p in st.session_state.players:
             for cat in get_categories():
                 if st.session_state.master_scores.at[cat, p] == "":
@@ -504,6 +539,7 @@ if st.session_state.game_active and st.session_state.players:
     if all_finished:
         st.session_state.game_active = False
         st.session_state.game_over = True
+        st.session_state.celebration_done = False
         st.rerun()
 
 # =========================================================
@@ -520,12 +556,10 @@ if st.session_state.game_over and st.session_state.players:
     winner_name = min(totals, key=totals.get)
     winner_score = totals[winner_name]
 
-    # 🎉 Balloons (only once)
     if not st.session_state.get("celebration_done", False):
         st.balloons()
         st.session_state.celebration_done = True
 
-    # 🏆 BIG WINNER BANNER
     st.markdown(f"""
         <div style="
             background: linear-gradient(135deg, #ff4b4b, #ff7a7a);
