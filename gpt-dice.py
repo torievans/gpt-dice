@@ -103,6 +103,17 @@ def sync_used_categories():
         ]
 
 
+def sync_manual_scores():
+    if "manual_table" in st.session_state:
+        edits = st.session_state["manual_table"].get("edited_rows", {})
+
+        for row_idx, col_map in edits.items():
+            for col_name, val in col_map.items():
+                cat_name = st.session_state.master_scores.index[row_idx]
+                st.session_state.master_scores.at[cat_name, col_name] = val
+
+    sync_used_categories()
+    
 # =========================================================
 # 2. CONFIG & DATA
 # =========================================================
@@ -446,14 +457,13 @@ Penalty values:
 - 5 of a Kind: 30
 """)
 
-        edited_df = st.data_editor(
+        st.data_editor(
             st.session_state.master_scores,
             use_container_width=True,
             key="manual_table"
         )
 
-        st.session_state.master_scores = edited_df
-        sync_used_categories()
+        sync_manual_scores()
         
 # =========================================================
 # 7. SCOREBOARD
