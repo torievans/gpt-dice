@@ -354,7 +354,7 @@ if not st.session_state.game_active and not st.session_state.game_over:
                 opacity: 0.7;
                 margin-bottom: 0;
             ">
-                📱On your phone? Go landscape for a better experience.
+                📱 On your phone? Go landscape for a better experience.
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -369,29 +369,29 @@ if not st.session_state.game_active and not st.session_state.game_over:
             save_data(stats)
             st.rerun()
 
-st.markdown("### 🎮 Game Setup")
+    st.markdown("### 🎮 Game Setup")
 
-col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([1, 1, 1])
 
-with col1:
-    st.session_state.game_mode = st.radio(
-        "Game Mode",
-        ["Play Dice", "Score Only"]
-    )
+    with col1:
+        st.session_state.game_mode = st.radio(
+            "Game Mode",
+            ["Play Dice", "Score Only"]
+        )
 
-with col2:
-    st.session_state.dice_type = st.radio(
-        "Dice Type",
-        ["Regular", "Poker"]
-    )
+    with col2:
+        st.session_state.dice_type = st.radio(
+            "Dice Type",
+            ["Regular", "Poker"]
+        )
 
-with col3:
-    st.markdown("<div style='margin-top:30px'></div>", unsafe_allow_html=True) 
-    start_clicked = st.button(
-        "Start Game",
-        type="primary",
-        use_container_width=True
-    )
+    with col3:
+        st.markdown("<div style='margin-top:30px'></div>", unsafe_allow_html=True)
+        start_clicked = st.button(
+            "Start Game",
+            type="primary",
+            use_container_width=True
+        )
 
     if start_clicked and players:
         categories = get_categories()
@@ -414,7 +414,7 @@ with col3:
         st.session_state.trick_b_category = ""
         st.session_state.celebration_done = False
         st.rerun()
-
+        
 # =========================================================
 # 6. GAMEPLAY
 # =========================================================
