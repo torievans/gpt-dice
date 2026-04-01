@@ -490,8 +490,9 @@ if st.session_state.game_active or st.session_state.game_over:
                     delta="Leading" if totals[p] == lowest else None
                 )
 
-    st.dataframe(st.session_state.master_scores, use_container_width=True)
-
+    if st.session_state.game_mode != "Score Only":
+        st.dataframe(st.session_state.master_scores, use_container_width=True)
+        
 # =========================================================
 # 7.5 DEBUG / FORCE END GAME
 # =========================================================
