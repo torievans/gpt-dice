@@ -371,23 +371,29 @@ if not st.session_state.game_active and not st.session_state.game_over:
 
 st.markdown("### 🎮 Game Setup")
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
     st.session_state.game_mode = st.radio(
         "Game Mode",
-        ["Play Dice", "Score Only"],
-        label_visibility="visible"
+        ["Play Dice", "Score Only"]
     )
 
 with col2:
     st.session_state.dice_type = st.radio(
         "Dice Type",
-        ["Regular", "Poker"],
-        label_visibility="visible"
+        ["Regular", "Poker"]
     )
 
-    if st.button("Start Game", type="primary") and players:
+with col3:
+    st.markdown("<br><br>", unsafe_allow_html=True)  # vertical alignment tweak
+    start_clicked = st.button(
+        "Start Game",
+        type="primary",
+        use_container_width=True
+    )
+
+    if start_clicked and players:
         categories = get_categories()
 
         st.session_state.players = players
