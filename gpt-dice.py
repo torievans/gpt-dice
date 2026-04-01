@@ -197,6 +197,21 @@ st.markdown("""
     margin-bottom: 6px;
 }
 
+/* 📱 MOBILE OPTIMISATION */
+@media (max-width: 768px) {
+    .dice-tile {
+        width: 60px;
+        height: 60px;
+        padding: 4px;
+    }
+
+    .pip {
+        width: 8px;
+        height: 8px;
+    }
+}
+
+/* 🔥 Hide sidebar */
 [data-testid="stSidebar"] {
     display: none;
 }
