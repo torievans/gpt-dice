@@ -371,7 +371,7 @@ if not st.session_state.game_active and not st.session_state.game_over:
             save_data(stats)
             st.rerun()
 
-    st.markdown("### 🎮 Game Setup")
+    st.markdown("### Game Setup")
 
     col1, col2, col3 = st.columns([1, 1, 1])
 
