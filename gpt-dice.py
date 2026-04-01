@@ -451,9 +451,10 @@ Penalty values:
             use_container_width=True,
             key="manual_table"
         )
+
         st.session_state.master_scores = edited_df
         sync_used_categories()
-
+        
 # =========================================================
 # 7. SCOREBOARD
 # =========================================================
