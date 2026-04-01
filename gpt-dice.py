@@ -540,20 +540,6 @@ if st.session_state.game_active or st.session_state.game_over:
     if st.session_state.game_mode != "Score Only":
         st.dataframe(st.session_state.master_scores, use_container_width=True)
         
-# =========================================================
-# 7.5 DEBUG / FORCE END GAME
-# =========================================================
-if st.session_state.game_active and not st.session_state.game_over:
-    if st.button("🧪 End Game (Test Winner Screen)", use_container_width=True):
-        for p in st.session_state.players:
-            for cat in get_categories():
-                if st.session_state.master_scores.at[cat, p] == "":
-                    st.session_state.master_scores.at[cat, p] = str(random.randint(0, 30))
-
-        st.session_state.game_active = False
-        st.session_state.game_over = True
-        st.session_state.celebration_done = False
-        st.rerun()
 
 # =========================================================
 # 8. GAME OVER CHECK
