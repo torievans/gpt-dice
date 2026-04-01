@@ -244,23 +244,26 @@ if st.session_state.game_active and not st.session_state.game_over:
     player = st.session_state.players[st.session_state.current_player_idx]
     st.header(f"{player}'s turn")
 
-        # =====================================================
+    # =====================================================
     # 6A. ROLL BUTTON
     # =====================================================
     locked_indices = st.session_state.trick_a_indices + st.session_state.trick_b_indices
 
     if st.button(
         "🎲 ROLL DICE",
+        key="roll_dice_btn",
         use_container_width=True,
         type="primary",
         disabled=st.session_state.rolls_left <= 0
     ):
-        for i in range(10):
-            if i not in locked_indices:
-                st.session_state.dice[i] = random.randint(1, 6)
-        st.session_state.rolls_left -= 1
-        st.session_state.just_rolled = True
-        st.rerun()
+        if st.session_state.rolls_left > 0:
+            for i in range(10):
+                if i not in locked_indices:
+                    st.session_state.dice[i] = random.randint(1, 6)
+
+            st.session_state.rolls_left = max(0, st.session_state.rolls_left - 1)
+            st.session_state.just_rolled = True
+            st.rerun()
 
     st.write(f"**Rolls left:** {st.session_state.rolls_left}")
 
