@@ -227,7 +227,14 @@ if not st.session_state.game_active and not st.session_state.game_over:
             save_data(stats)
             st.rerun()
 
-    if st.button("Start") and players:
+    st.markdown("### 🎮 Game Mode")
+    st.session_state.game_mode = st.radio(
+        "Choose how you want to play:",
+        ["Play Dice", "Score Only"],
+        horizontal=True
+    )
+
+    if st.button("Start Game", type="primary") and players:
         st.session_state.players = players
         st.session_state.master_scores = pd.DataFrame(
             "",
