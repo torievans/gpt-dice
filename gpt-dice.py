@@ -262,14 +262,14 @@ if not st.session_state.game_active and not st.session_state.game_over:
                 font-size: 24px;
                 margin-bottom: 10px;
             ">
-                A fun multiplayer dice game also known as Double Cameroons
+                Playing on your phone? turn it to landscape
             </p>
             <p style="
                 font-size: 18px;
                 opacity: 0.8;
                 margin-bottom: 0;
             ">
-                Lowest score wins
+                A fun multiplayer dice game also known as Double Cameroons
             </p>
         </div>
     """, unsafe_allow_html=True)
