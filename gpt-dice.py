@@ -386,7 +386,7 @@ with col2:
     )
 
 with col3:
-    st.markdown("<br><br>", unsafe_allow_html=True)  # vertical alignment tweak
+    st.markdown("<div style='margin-top:30px'></div>", unsafe_allow_html=True) 
     start_clicked = st.button(
         "Start Game",
         type="primary",
