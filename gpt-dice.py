@@ -244,42 +244,40 @@ if st.session_state.game_active and not st.session_state.game_over:
     st.header(f"{player}'s turn")
 
     # =====================================================
-# 6A. ROLL BUTTON
-# =====================================================
-import time
+    # 6A. ROLL BUTTON
+    # =====================================================
+    import time
 
-locked_indices = st.session_state.trick_a_indices + st.session_state.trick_b_indices
+    locked_indices = st.session_state.trick_a_indices + st.session_state.trick_b_indices
 
-cooldown = 2  # seconds
-time_since_last_roll = time.time() - st.session_state.last_roll_time
-can_roll = time_since_last_roll >= cooldown and st.session_state.rolls_left > 0
+    cooldown = 2
+    time_since_last_roll = time.time() - st.session_state.last_roll_time
+    can_roll = time_since_last_roll >= cooldown and st.session_state.rolls_left > 0
 
-if st.button(
-    "🎲 ROLL DICE",
-    key="roll_dice_btn",
-    use_container_width=True,
-    type="primary",
-    disabled=not can_roll
-):
-    if can_roll:
-        for i in range(10):
-            if i not in locked_indices:
-                st.session_state.dice[i] = random.randint(1, 6)
+    if st.button(
+        "🎲 ROLL DICE",
+        key="roll_dice_btn",
+        use_container_width=True,
+        type="primary",
+        disabled=not can_roll
+    ):
+        if can_roll:
+            for i in range(10):
+                if i not in locked_indices:
+                    st.session_state.dice[i] = random.randint(1, 6)
 
-        st.session_state.rolls_left = max(0, st.session_state.rolls_left - 1)
-        st.session_state.just_rolled = True
-        st.session_state.last_roll_time = time.time()
-        st.rerun()
+            st.session_state.rolls_left = max(0, st.session_state.rolls_left - 1)
+            st.session_state.last_roll_time = time.time()
+            st.rerun()
 
-# Optional: show cooldown feedback
-if not can_roll and st.session_state.rolls_left > 0:
-    remaining = round(cooldown - time_since_last_roll, 1)
-    if remaining > 0:
-        st.caption(f"⏳ Wait {remaining}s before rolling again")
+    if not can_roll and st.session_state.rolls_left > 0:
+        remaining = round(cooldown - time_since_last_roll, 1)
+        if remaining > 0:
+            st.caption(f"⏳ Wait {remaining}s before rolling again")
 
-st.write(f"**Rolls left:** {st.session_state.rolls_left}")
+    st.write(f"**Rolls left:** {st.session_state.rolls_left}")
 
-        # =====================================================
+    # =====================================================
     # 6B. DICE DISPLAY
     # =====================================================
     st.markdown("### 🎲 Your Dice")
@@ -343,8 +341,6 @@ st.write(f"**Rolls left:** {st.session_state.rolls_left}")
                     if len(st.session_state.trick_b_indices) < 5:
                         st.session_state.trick_b_category = ""
                     st.rerun()
-
-    st.session_state.just_rolled = False
     
 # =========================================================
 # 7. SCOREBOARD
