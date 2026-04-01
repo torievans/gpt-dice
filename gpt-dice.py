@@ -262,7 +262,7 @@ if not st.session_state.game_active and not st.session_state.game_over:
                 font-size: 24px;
                 margin-bottom: 10px;
             ">
-                📱 Using your phone? Rotate to landscape for the best experience.
+                📱Using your phone? Rotate to landscape for the best experience.
             </p>
             <p style="
                 font-size: 18px;
