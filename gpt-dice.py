@@ -477,6 +477,22 @@ if st.session_state.game_active or st.session_state.game_over:
     st.dataframe(st.session_state.master_scores, use_container_width=True)
 
 # =========================================================
+# 7.5 DEBUG / FORCE END GAME
+# =========================================================
+if st.session_state.game_active and not st.session_state.game_over:
+    if st.button("🧪 End Game (Test Winner Screen)", use_container_width=True):
+        # Fake some scores so winner logic works
+        for p in st.session_state.players:
+            for cat in get_categories():
+                if st.session_state.master_scores.at[cat, p] == "":
+                    st.session_state.master_scores.at[cat, p] = str(random.randint(0, 30))
+
+        st.session_state.game_active = False
+        st.session_state.game_over = True
+        st.session_state.celebration_done = False
+        st.rerun()
+
+# =========================================================
 # 8. GAME OVER CHECK
 # =========================================================
 if st.session_state.game_active and st.session_state.players:
@@ -504,6 +520,11 @@ if st.session_state.game_over and st.session_state.players:
     winner_name = min(totals, key=totals.get)
     winner_score = totals[winner_name]
 
+    # 🎉 Trigger balloons ONCE
+    if not st.session_state.get("celebration_done", False):
+        st.balloons()
+        st.session_state.celebration_done = True
+
     st.success(f"🏆 Winner: {winner_name} with {winner_score} penalty points")
 
     if st.button("Play Again", type="primary", use_container_width=True):
@@ -519,4 +540,5 @@ if st.session_state.game_over and st.session_state.players:
         st.session_state.trick_b_indices = []
         st.session_state.trick_a_category = ""
         st.session_state.trick_b_category = ""
+        st.session_state.celebration_done = False
         st.rerun()
