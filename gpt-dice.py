@@ -117,7 +117,7 @@ def sync_manual_scores():
 # =========================================================
 # 2. CONFIG & DATA
 # =========================================================
-st.set_page_config(page_title="Double Cameroon", layout="wide")
+st.set_page_config(page_title="Dicey Dice", layout="wide")
 DB_FILE = "cameroon_stats.json"
 
 
