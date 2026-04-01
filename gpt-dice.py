@@ -171,7 +171,7 @@ def render_dice_face(value, selected_for=None):
     return f'''
     <div class="{css_class}" style="padding:0; overflow:hidden;">
         <img src="data:image/png;base64,{img_base64}"
-             style="width:100%; height:100%; object-fit:contain; display:block;">
+             style="width:100%; height:100%; object-fit:cover; display:block;">
     </div>
     '''
 
@@ -235,12 +235,12 @@ st.markdown("""
     border: 3px solid #111;
     border-radius: 12px;
     background: white;
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
-    grid-template-rows: repeat(3,1fr);
-    padding: 6px;
+    display: flex;              /* 🔥 change from grid → flex */
+    align-items: center;
+    justify-content: center;
+    padding: 0;                 /* 🔥 remove padding */
     margin: 0 auto 6px auto;
-    box-sizing: border-box;
+    overflow: hidden;           /* 🔥 ensures image fills nicely */
 }
 
 .dice-tile.selected-a {
