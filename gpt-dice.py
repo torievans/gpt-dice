@@ -246,7 +246,42 @@ for k, v in defaults.items():
 # 5. SETUP
 # =========================================================
 if not st.session_state.game_active and not st.session_state.game_over:
-    st.title("🎲 Dicey Dice")
+    st.markdown("""
+        <div style="
+            text-align: center;
+            padding: 28px 20px 10px 20px;
+            margin-bottom: 20px;
+        ">
+            <h1 style="
+                font-size: 56px;
+                margin-bottom: 10px;
+            ">
+                🎲 Dicey Dice
+            </h1>
+            <p style="
+                font-size: 24px;
+                margin-bottom: 10px;
+            ">
+                A fun multiplayer dice game also known as Double Cameroons.
+            </p>
+            <p style="
+                font-size: 18px;
+                opacity: 0.8;
+                margin-bottom: 0;
+            ">
+                Lowest score wins.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    preview_cols = st.columns(10)
+    preview_vals = [3, 5, 1, 6, 2, 4, 1, 5, 2, 6]
+
+    for i, col in enumerate(preview_cols):
+        with col:
+            st.markdown(render_dice_face(preview_vals[i]), unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     players = st.multiselect("Select players", list(stats["Players"].keys()))
     new_player = st.text_input("Add new player")
