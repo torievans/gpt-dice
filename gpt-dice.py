@@ -369,18 +369,22 @@ if not st.session_state.game_active and not st.session_state.game_over:
             save_data(stats)
             st.rerun()
 
-    st.markdown("### 🎮 Game Mode")
+st.markdown("### 🎮 Game Setup")
+
+col1, col2 = st.columns(2)
+
+with col1:
     st.session_state.game_mode = st.radio(
-        "Choose how you want to play:",
+        "Game Mode",
         ["Play Dice", "Score Only"],
-        horizontal=True
+        label_visibility="visible"
     )
 
-    st.markdown("### 🎲 Dice Type")
+with col2:
     st.session_state.dice_type = st.radio(
-        "Choose dice style:",
+        "Dice Type",
         ["Regular", "Poker"],
-        horizontal=True
+        label_visibility="visible"
     )
 
     if st.button("Start Game", type="primary") and players:
