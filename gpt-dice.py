@@ -520,14 +520,39 @@ if st.session_state.game_over and st.session_state.players:
     winner_name = min(totals, key=totals.get)
     winner_score = totals[winner_name]
 
-    # 🎉 Trigger balloons ONCE
+    # 🎉 Balloons (only once)
     if not st.session_state.get("celebration_done", False):
         st.balloons()
         st.session_state.celebration_done = True
 
-    st.success(f"🏆 Winner: {winner_name} with {winner_score} penalty points")
+    # 🏆 BIG WINNER BANNER
+    st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #ff4b4b, #ff7a7a);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        ">
+            <h1 style="
+                color: white;
+                font-size: 48px;
+                margin-bottom: 10px;
+            ">
+                🏆 {winner_name.upper()} WINS! 🏆
+            </h1>
+            <p style="
+                color: white;
+                font-size: 26px;
+                margin: 0;
+            ">
+                Final Score: {winner_score}
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
 
-    if st.button("Play Again", type="primary", use_container_width=True):
+    if st.button("🔄 Play Again", type="primary", use_container_width=True):
         st.session_state.game_active = False
         st.session_state.game_over = False
         st.session_state.dice = [0] * 10
