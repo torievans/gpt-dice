@@ -4,6 +4,11 @@ import json
 import os
 import random
 from collections import Counter
+import base64
+
+def image_file_to_base64(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
 # =========================================================
 # 1. SCORE ENGINE
@@ -128,6 +133,7 @@ def render_dice_face(value, selected_for=None):
     elif selected_for == "B":
         css_class += " selected-b"
 
+    # 🎲 Regular dice
     if not poker_mode:
         pip_map = {
             0: [],
@@ -145,24 +151,27 @@ def render_dice_face(value, selected_for=None):
         html += "</div>"
         return html
 
-    value_to_label = {
-        1: "9",
-        2: "10",
-        3: "J",
-        4: "Q",
-        5: "K",
-        6: "A",
+    # 🃏 Poker dice (FIXED)
+    value_to_filename = {
+        1: "poker_9.png",
+        2: "poker_10.png",
+        3: "poker_J.png",
+        4: "poker_Q.png",
+        5: "poker_K.png",
+        6: "poker_A.png",
     }
 
-    label = value_to_label.get(value, "")
-    if not label:
+    filename = value_to_filename.get(value)
+
+    if not filename or not os.path.exists(filename):
         return f'<div class="{css_class}"></div>'
 
-    img_path = f"poker_{label}.png"
+    img_base64 = image_file_to_base64(filename)
 
     return f'''
-    <div class="{css_class}" style="padding:0;">
-        <img src="{img_path}" style="width:100%; height:100%; object-fit:contain;">
+    <div class="{css_class}" style="padding:0; overflow:hidden;">
+        <img src="data:image/png;base64,{img_base64}"
+             style="width:100%; height:100%; object-fit:contain; display:block;">
     </div>
     '''
 
