@@ -246,7 +246,7 @@ for k, v in defaults.items():
 # 5. SETUP
 # =========================================================
 if not st.session_state.game_active and not st.session_state.game_over:
-    st.title("Start Game")
+    st.title("🎲 Dicey Dice")
 
     players = st.multiselect("Select players", list(stats["Players"].keys()))
     new_player = st.text_input("Add new player")
