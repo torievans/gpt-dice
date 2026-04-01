@@ -274,15 +274,6 @@ if not st.session_state.game_active and not st.session_state.game_over:
         </div>
     """, unsafe_allow_html=True)
 
-    preview_cols = st.columns(10)
-    preview_vals = [3, 5, 1, 6, 2, 4, 1, 5, 2, 6]
-
-    for i, col in enumerate(preview_cols):
-        with col:
-            st.markdown(render_dice_face(preview_vals[i]), unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
     players = st.multiselect("Select players", list(stats["Players"].keys()))
     new_player = st.text_input("Add new player")
 
