@@ -145,44 +145,17 @@ st.markdown("""
     margin: 0 auto 6px auto;
 }
 
-.dice-tile.selected-a {
-    background: #ff4b4b;
-    border-color: #ff4b4b;
-}
-
-.dice-tile.selected-b {
-    background: #1f77b4;
-    border-color: #1f77b4;
-}
-
-.pip {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: black;
-    align-self: center;
-    justify-self: center;
-}
-
-.dice-tile.selected-a .pip,
-.dice-tile.selected-b .pip {
-    background: white;
-}
-
-.dice-slot-1 { grid-column: 1; grid-row: 1; }
-.dice-slot-2 { grid-column: 2; grid-row: 1; }
-.dice-slot-3 { grid-column: 3; grid-row: 1; }
-.dice-slot-4 { grid-column: 1; grid-row: 2; }
-.dice-slot-5 { grid-column: 2; grid-row: 2; }
-.dice-slot-6 { grid-column: 3; grid-row: 2; }
-.dice-slot-7 { grid-column: 1; grid-row: 3; }
-.dice-slot-8 { grid-column: 2; grid-row: 3; }
-.dice-slot-9 { grid-column: 3; grid-row: 3; }
+...
 
 .summary-title {
     font-weight: 700;
     font-size: 18px;
     margin-bottom: 6px;
+}
+
+/* 🔥 ADD THIS AT THE END */
+[data-testid="stSidebar"] {
+    display: none;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -253,17 +226,6 @@ if not st.session_state.game_active and not st.session_state.game_over:
         st.session_state.trick_b_category = ""
         st.session_state.celebration_done = False
         st.rerun()
-
-# =========================================================
-# 5.5 GAME MODE SELECTOR
-# =========================================================
-with st.sidebar:
-    st.header("⚙️ Settings")
-    st.session_state.game_mode = st.radio(
-        "Game Mode",
-        ["Play Dice", "Score Only"],
-        index=0 if st.session_state.game_mode == "Play Dice" else 1
-    )
 
 # =========================================================
 # 6. GAMEPLAY
