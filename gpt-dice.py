@@ -262,14 +262,14 @@ if not st.session_state.game_active and not st.session_state.game_over:
                 font-size: 24px;
                 margin-bottom: 10px;
             ">
-                A fun multiplayer dice game also known as Double Cameroons.
+                A fun multiplayer dice game also known as Double Cameroons
             </p>
             <p style="
                 font-size: 18px;
                 opacity: 0.8;
                 margin-bottom: 0;
             ">
-                Lowest score wins.
+                Lowest score wins
             </p>
         </div>
     """, unsafe_allow_html=True)
