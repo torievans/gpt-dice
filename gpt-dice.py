@@ -195,12 +195,13 @@ defaults = {
     "trick_b_indices": [],
     "trick_a_category": "",
     "trick_b_category": "",
+    "just_rolled": False,
+    "roll_in_progress": False,
 }
 
 for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
-
 # =========================================================
 # 5. SETUP
 # =========================================================
@@ -243,7 +244,7 @@ if st.session_state.game_active and not st.session_state.game_over:
     player = st.session_state.players[st.session_state.current_player_idx]
     st.header(f"{player}'s turn")
 
-    # =====================================================
+        # =====================================================
     # 6A. ROLL BUTTON
     # =====================================================
     locked_indices = st.session_state.trick_a_indices + st.session_state.trick_b_indices
@@ -258,11 +259,12 @@ if st.session_state.game_active and not st.session_state.game_over:
             if i not in locked_indices:
                 st.session_state.dice[i] = random.randint(1, 6)
         st.session_state.rolls_left -= 1
+        st.session_state.just_rolled = True
         st.rerun()
 
     st.write(f"**Rolls left:** {st.session_state.rolls_left}")
 
-    # =====================================================
+        # =====================================================
     # 6B. DICE DISPLAY
     # =====================================================
     st.markdown("### 🎲 Your Dice")
@@ -327,114 +329,8 @@ if st.session_state.game_active and not st.session_state.game_over:
                         st.session_state.trick_b_category = ""
                     st.rerun()
 
-    # =====================================================
-    # 6C. SELECTION SUMMARY
-    # =====================================================
-    trick_a_vals = sorted(
-        [st.session_state.dice[i] for i in st.session_state.trick_a_indices],
-        reverse=True
-    )
-    trick_b_vals = sorted(
-        [st.session_state.dice[i] for i in st.session_state.trick_b_indices],
-        reverse=True
-    )
-
-    summary_col1, summary_col2 = st.columns(2)
-
-    with summary_col1:
-        st.markdown('<div class="summary-title">🔴 Trick A</div>', unsafe_allow_html=True)
-        st.write(f"Selected: {len(trick_a_vals)}/5")
-        st.write(f"Dice: {trick_a_vals if trick_a_vals else []}")
-
-        available_a = get_available_categories(player)
-        selected_b_current = st.session_state.trick_b_category
-
-        if len(trick_a_vals) == 5:
-            a_options = [""] + [c for c in available_a if c != selected_b_current]
-            current_a = (
-                st.session_state.trick_a_category
-                if st.session_state.trick_a_category in a_options
-                else ""
-            )
-
-            st.session_state.trick_a_category = st.selectbox(
-                "Choose category for Trick A",
-                a_options,
-                index=a_options.index(current_a) if current_a in a_options else 0,
-                key="trick_a_dropdown",
-            )
-        else:
-            st.caption("Select 5 dice for Trick A to choose a category.")
-
-    with summary_col2:
-        st.markdown('<div class="summary-title">🔵 Trick B</div>', unsafe_allow_html=True)
-        st.write(f"Selected: {len(trick_b_vals)}/5")
-        st.write(f"Dice: {trick_b_vals if trick_b_vals else []}")
-
-        available_b = get_available_categories(player)
-        selected_a_current = st.session_state.trick_a_category
-
-        if len(trick_b_vals) == 5:
-            b_options = [""] + [c for c in available_b if c != selected_a_current]
-            current_b = (
-                st.session_state.trick_b_category
-                if st.session_state.trick_b_category in b_options
-                else ""
-            )
-
-            st.session_state.trick_b_category = st.selectbox(
-                "Choose category for Trick B",
-                b_options,
-                index=b_options.index(current_b) if current_b in b_options else 0,
-                key="trick_b_dropdown",
-            )
-        else:
-            st.caption("Select 5 dice for Trick B to choose a category.")
-
-    # =====================================================
-    # 6D. CONFIRM TURN
-    # =====================================================
-    ready_to_confirm = (
-        len(trick_a_vals) == 5
-        and len(trick_b_vals) == 5
-        and st.session_state.trick_a_category != ""
-        and st.session_state.trick_b_category != ""
-        and st.session_state.trick_a_category != st.session_state.trick_b_category
-    )
-
-    if not ready_to_confirm:
-        if len(trick_a_vals) < 5 or len(trick_b_vals) < 5:
-            st.info("Choose 5 dice for Trick A and 5 dice for Trick B.")
-        else:
-            st.info("Choose a different category for each trick before confirming.")
-
-    if st.button(
-        "Confirm Turn",
-        key="confirm_turn_btn",
-        type="primary",
-        use_container_width=True,
-        disabled=not ready_to_confirm
-    ):
-        cat_a = st.session_state.trick_a_category
-        cat_b = st.session_state.trick_b_category
-
-        st.session_state.master_scores.at[cat_a, player] = score_category(cat_a, trick_a_vals)
-        st.session_state.master_scores.at[cat_b, player] = score_category(cat_b, trick_b_vals)
-
-        st.session_state.used_categories[player] += [cat_a, cat_b]
-        st.session_state.dice = [0] * 10
-        st.session_state.rolls_left = 3
-        st.session_state.trick_a_indices = []
-        st.session_state.trick_b_indices = []
-        st.session_state.trick_a_category = ""
-        st.session_state.trick_b_category = ""
-
-        st.session_state.current_player_idx = (
-            st.session_state.current_player_idx + 1
-        ) % len(st.session_state.players)
-
-        st.rerun()
-
+    st.session_state.just_rolled = False
+    
 # =========================================================
 # 7. SCOREBOARD
 # =========================================================
