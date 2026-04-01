@@ -6,13 +6,14 @@ import random
 from collections import Counter
 import base64
 
+# =========================================================
+# 1. HELPERS / SCORE ENGINE
+# =========================================================
 def image_file_to_base64(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-# =========================================================
-# 1. SCORE ENGINE
-# =========================================================
+
 def get_categories():
     if st.session_state.get("dice_type", "Regular") == "Poker":
         return [
@@ -133,7 +134,6 @@ def render_dice_face(value, selected_for=None):
     elif selected_for == "B":
         css_class += " selected-b"
 
-    # 🎲 Regular dice
     if not poker_mode:
         pip_map = {
             0: [],
@@ -145,13 +145,12 @@ def render_dice_face(value, selected_for=None):
             6: [1, 3, 4, 6, 7, 9],
         }
 
-        html = f'<div class="{css_class}">'
+        html = f'<div class="{css_class}" style="display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);">'
         for pos in pip_map.get(value, []):
             html += f'<div class="pip dice-slot-{pos}"></div>'
         html += "</div>"
         return html
 
-    # 🃏 Poker dice (FIXED)
     value_to_filename = {
         1: "poker_9.png",
         2: "poker_10.png",
@@ -235,12 +234,13 @@ st.markdown("""
     border: 3px solid #111;
     border-radius: 12px;
     background: white;
-    display: flex;              /* 🔥 change from grid → flex */
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;                 /* 🔥 remove padding */
+    padding: 0;
     margin: 0 auto 6px auto;
-    overflow: hidden;           /* 🔥 ensures image fills nicely */
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .dice-tile.selected-a {
@@ -287,7 +287,6 @@ st.markdown("""
     .dice-tile {
         width: 60px;
         height: 60px;
-        padding: 4px;
     }
 
     .pip {
@@ -328,9 +327,12 @@ for k, v in defaults.items():
         st.session_state[k] = v
 
 # =========================================================
-# 5. SETUP
+# 5 / 6 / 9. MAIN SCREEN FLOW
 # =========================================================
 if not st.session_state.game_active and not st.session_state.game_over:
+    # =====================================================
+    # 5. SETUP
+    # =====================================================
     st.markdown("""
         <div style="
             text-align: center;
@@ -414,11 +416,11 @@ if not st.session_state.game_active and not st.session_state.game_over:
         st.session_state.trick_b_category = ""
         st.session_state.celebration_done = False
         st.rerun()
-        
-# =========================================================
-# 6. GAMEPLAY
-# =========================================================
-if st.session_state.game_active and not st.session_state.game_over:
+
+elif st.session_state.game_active and not st.session_state.game_over:
+    # =====================================================
+    # 6. GAMEPLAY
+    # =====================================================
     player = st.session_state.players[st.session_state.current_player_idx]
 
     if st.session_state.game_mode == "Play Dice":
@@ -642,68 +644,10 @@ Penalty values:
 
         sync_manual_scores()
 
-# =========================================================
-# 7. SCOREBOARD
-# =========================================================
-if st.session_state.game_active or st.session_state.game_over:
-    st.subheader("Scores")
-
-    totals = {
-        p: st.session_state.master_scores[p].apply(
-            lambda x: int(x) if str(x).isdigit() else 0
-        ).sum()
-        for p in st.session_state.players
-    }
-
-    if totals:
-        score_cols = st.columns(len(st.session_state.players))
-        lowest = min(totals.values())
-
-        for idx, p in enumerate(st.session_state.players):
-            with score_cols[idx]:
-                st.metric(
-                    label=f"{p}'s Score",
-                    value=totals[p],
-                    delta="Leading" if totals[p] == lowest else None
-                )
-
-    if st.session_state.game_mode != "Score Only":
-        st.dataframe(st.session_state.master_scores, use_container_width=True)
-
-# =========================================================
-# 7.5 DEBUG / FORCE END GAME
-# =========================================================
-if st.session_state.game_active and not st.session_state.game_over:
-    if st.button("🧪 End Game (Test Winner Screen)", use_container_width=True):
-        for p in st.session_state.players:
-            for cat in get_categories():
-                if st.session_state.master_scores.at[cat, p] == "":
-                    st.session_state.master_scores.at[cat, p] = str(random.randint(0, 30))
-
-        st.session_state.game_active = False
-        st.session_state.game_over = True
-        st.session_state.celebration_done = False
-        st.rerun()
-
-# =========================================================
-# 8. GAME OVER CHECK
-# =========================================================
-if st.session_state.game_active and st.session_state.players:
-    all_finished = all(
-        len(st.session_state.used_categories.get(p, [])) >= 10
-        for p in st.session_state.players
-    )
-
-    if all_finished:
-        st.session_state.game_active = False
-        st.session_state.game_over = True
-        st.session_state.celebration_done = False
-        st.rerun()
-
-# =========================================================
-# 9. WINNER SCREEN
-# =========================================================
-if st.session_state.game_over and st.session_state.players:
+elif st.session_state.game_over and st.session_state.players:
+    # =====================================================
+    # 9. WINNER SCREEN
+    # =====================================================
     totals = {
         p: st.session_state.master_scores[p].apply(
             lambda x: int(x) if str(x).isdigit() else 0
@@ -757,5 +701,63 @@ if st.session_state.game_over and st.session_state.players:
         st.session_state.trick_b_indices = []
         st.session_state.trick_a_category = ""
         st.session_state.trick_b_category = ""
+        st.session_state.celebration_done = False
+        st.rerun()
+
+# =========================================================
+# 7. SCOREBOARD
+# =========================================================
+if st.session_state.game_active or st.session_state.game_over:
+    st.subheader("Scores")
+
+    totals = {
+        p: st.session_state.master_scores[p].apply(
+            lambda x: int(x) if str(x).isdigit() else 0
+        ).sum()
+        for p in st.session_state.players
+    }
+
+    if totals:
+        score_cols = st.columns(len(st.session_state.players))
+        lowest = min(totals.values())
+
+        for idx, p in enumerate(st.session_state.players):
+            with score_cols[idx]:
+                st.metric(
+                    label=f"{p}'s Score",
+                    value=totals[p],
+                    delta="Leading" if totals[p] == lowest else None
+                )
+
+    if st.session_state.game_mode != "Score Only" and st.session_state.game_active:
+        st.dataframe(st.session_state.master_scores, use_container_width=True)
+
+# =========================================================
+# 7.5 DEBUG / FORCE END GAME
+# =========================================================
+if st.session_state.game_active and not st.session_state.game_over:
+    if st.button("🧪 End Game (Test Winner Screen)", use_container_width=True):
+        for p in st.session_state.players:
+            for cat in get_categories():
+                if st.session_state.master_scores.at[cat, p] == "":
+                    st.session_state.master_scores.at[cat, p] = str(random.randint(0, 30))
+
+        st.session_state.game_active = False
+        st.session_state.game_over = True
+        st.session_state.celebration_done = False
+        st.rerun()
+
+# =========================================================
+# 8. GAME OVER CHECK
+# =========================================================
+if st.session_state.game_active and st.session_state.players:
+    all_finished = all(
+        len(st.session_state.used_categories.get(p, [])) >= 10
+        for p in st.session_state.players
+    )
+
+    if all_finished:
+        st.session_state.game_active = False
+        st.session_state.game_over = True
         st.session_state.celebration_done = False
         st.rerun()
