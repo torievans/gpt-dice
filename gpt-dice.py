@@ -8,10 +8,77 @@ from collections import Counter
 # =========================================================
 # 1. SCORE ENGINE
 # =========================================================
+def get_categories():
+    if st.session_state.get("dice_type", "Regular") == "Poker":
+        return [
+            "9s",
+            "10s",
+            "Js",
+            "Qs",
+            "Ks",
+            "As",
+            "Full House",
+            "Low Straight",
+            "High Straight",
+            "5 of a Kind",
+        ]
+    return [
+        "1s",
+        "2s",
+        "3s",
+        "4s",
+        "5s",
+        "6s",
+        "Full House",
+        "Low Straight",
+        "High Straight",
+        "5 of a Kind",
+    ]
+
+
+def get_target_map():
+    if st.session_state.get("dice_type", "Regular") == "Poker":
+        return {
+            "9s": 1,
+            "10s": 2,
+            "Js": 3,
+            "Qs": 4,
+            "Ks": 5,
+            "As": 6,
+        }
+    return {
+        "1s": 1,
+        "2s": 2,
+        "3s": 3,
+        "4s": 4,
+        "5s": 5,
+        "6s": 6,
+    }
+
+
+def format_die_value(value):
+    if st.session_state.get("dice_type", "Regular") == "Poker":
+        value_to_label = {
+            1: "9",
+            2: "10",
+            3: "J",
+            4: "Q",
+            5: "K",
+            6: "A",
+            0: "",
+        }
+        return value_to_label.get(value, str(value))
+    return str(value)
+
+
+def format_dice_list(values):
+    return [format_die_value(v) for v in values]
+
+
 def calculate_score(dice, category):
     dice = sorted(dice)
     counts = Counter(dice)
-    target_map = {"1s": 1, "2s": 2, "3s": 3, "4s": 4, "5s": 5, "6s": 6}
+    target_map = get_target_map()
 
     if category in target_map:
         target = target_map[category]
@@ -53,15 +120,7 @@ def score_category(cat, vals):
 
 
 def render_dice_face(value, selected_for=None):
-    pip_map = {
-        0: [],
-        1: [5],
-        2: [1, 9],
-        3: [1, 5, 9],
-        4: [1, 3, 7, 9],
-        5: [1, 3, 5, 7, 9],
-        6: [1, 3, 4, 6, 7, 9],
-    }
+    poker_mode = st.session_state.get("dice_type", "Regular") == "Poker"
 
     css_class = "dice-tile"
     if selected_for == "A":
@@ -69,26 +128,43 @@ def render_dice_face(value, selected_for=None):
     elif selected_for == "B":
         css_class += " selected-b"
 
-    html = f'<div class="{css_class}">'
-    for pos in pip_map.get(value, []):
-        html += f'<div class="pip dice-slot-{pos}"></div>'
-    html += "</div>"
-    return html
+    if not poker_mode:
+        pip_map = {
+            0: [],
+            1: [5],
+            2: [1, 9],
+            3: [1, 5, 9],
+            4: [1, 3, 7, 9],
+            5: [1, 3, 5, 7, 9],
+            6: [1, 3, 4, 6, 7, 9],
+        }
 
+        html = f'<div class="{css_class}">'
+        for pos in pip_map.get(value, []):
+            html += f'<div class="pip dice-slot-{pos}"></div>'
+        html += "</div>"
+        return html
 
-def get_categories():
-    return [
-        "1s",
-        "2s",
-        "3s",
-        "4s",
-        "5s",
-        "6s",
-        "Full House",
-        "Low Straight",
-        "High Straight",
-        "5 of a Kind",
-    ]
+    value_to_label = {
+        1: "9",
+        2: "10",
+        3: "J",
+        4: "Q",
+        5: "K",
+        6: "A",
+    }
+
+    label = value_to_label.get(value, "")
+    if not label:
+        return f'<div class="{css_class}"></div>'
+
+    img_path = f"poker_{label}.png"
+
+    return f'''
+    <div class="{css_class}" style="padding:0;">
+        <img src="{img_path}" style="width:100%; height:100%; object-fit:contain;">
+    </div>
+    '''
 
 
 def get_available_categories(player):
@@ -113,11 +189,12 @@ def sync_manual_scores():
                 st.session_state.master_scores.at[cat_name, col_name] = val
 
     sync_used_categories()
-    
+
+
 # =========================================================
 # 2. CONFIG & DATA
 # =========================================================
-st.set_page_config(page_title="Dicey Dice", layout="wide")
+st.set_page_config(page_title="🎲 Dicey Dice", page_icon="🎲", layout="wide")
 DB_FILE = "cameroon_stats.json"
 
 
@@ -197,7 +274,6 @@ st.markdown("""
     margin-bottom: 6px;
 }
 
-/* 📱 MOBILE OPTIMISATION */
 @media (max-width: 768px) {
     .dice-tile {
         width: 60px;
@@ -211,7 +287,6 @@ st.markdown("""
     }
 }
 
-/* 🔥 Hide sidebar */
 [data-testid="stSidebar"] {
     display: none;
 }
@@ -235,6 +310,7 @@ defaults = {
     "trick_a_category": "",
     "trick_b_category": "",
     "game_mode": "Play Dice",
+    "dice_type": "Regular",
     "celebration_done": False,
 }
 
@@ -249,27 +325,27 @@ if not st.session_state.game_active and not st.session_state.game_over:
     st.markdown("""
         <div style="
             text-align: center;
-            padding: 28px 20px 10px 20px;
-            margin-bottom: 20px;
+            padding: 10px 20px 0px 20px;
+            margin-bottom: 10px;
         ">
             <h1 style="
-                font-size: 56px;
-                margin-bottom: 10px;
+                font-size: 48px;
+                margin-bottom: 6px;
             ">
                 🎲 Dicey Dice
             </h1>
             <p style="
-                font-size: 24px;
-                margin-bottom: 10px;
+                font-size: 18px;
+                margin-bottom: 4px;
             ">
-                📱Using your phone? Rotate to landscape for the best experience.
+                A fun multiplayer dice game
             </p>
             <p style="
-                font-size: 18px;
-                opacity: 0.8;
+                font-size: 14px;
+                opacity: 0.7;
                 margin-bottom: 0;
             ">
-                A fun multiplayer dice game also known as Double Cameroons
+                On your phone? Try landscape mode for a better view.
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -291,11 +367,20 @@ if not st.session_state.game_active and not st.session_state.game_over:
         horizontal=True
     )
 
+    st.markdown("### 🎲 Dice Type")
+    st.session_state.dice_type = st.radio(
+        "Choose dice style:",
+        ["Regular", "Poker"],
+        horizontal=True
+    )
+
     if st.button("Start Game", type="primary") and players:
+        categories = get_categories()
+
         st.session_state.players = players
         st.session_state.master_scores = pd.DataFrame(
             "",
-            index=get_categories(),
+            index=categories,
             columns=players
         )
         st.session_state.used_categories = {p: [] for p in players}
@@ -424,7 +509,7 @@ if st.session_state.game_active and not st.session_state.game_over:
         with summary_col1:
             st.markdown('<div class="summary-title">🔴 Trick A</div>', unsafe_allow_html=True)
             st.write(f"Selected: {len(trick_a_vals)}/5")
-            st.write(f"Dice: {trick_a_vals if trick_a_vals else []}")
+            st.write(f"Dice: {format_dice_list(trick_a_vals) if trick_a_vals else []}")
 
             available_a = get_available_categories(player)
             selected_b_current = st.session_state.trick_b_category
@@ -449,7 +534,7 @@ if st.session_state.game_active and not st.session_state.game_over:
         with summary_col2:
             st.markdown('<div class="summary-title">🔵 Trick B</div>', unsafe_allow_html=True)
             st.write(f"Selected: {len(trick_b_vals)}/5")
-            st.write(f"Dice: {trick_b_vals if trick_b_vals else []}")
+            st.write(f"Dice: {format_dice_list(trick_b_vals) if trick_b_vals else []}")
 
             available_b = get_available_categories(player)
             selected_a_current = st.session_state.trick_a_category
@@ -537,7 +622,7 @@ Penalty values:
         )
 
         sync_manual_scores()
-        
+
 # =========================================================
 # 7. SCOREBOARD
 # =========================================================
@@ -565,7 +650,21 @@ if st.session_state.game_active or st.session_state.game_over:
 
     if st.session_state.game_mode != "Score Only":
         st.dataframe(st.session_state.master_scores, use_container_width=True)
-        
+
+# =========================================================
+# 7.5 DEBUG / FORCE END GAME
+# =========================================================
+if st.session_state.game_active and not st.session_state.game_over:
+    if st.button("🧪 End Game (Test Winner Screen)", use_container_width=True):
+        for p in st.session_state.players:
+            for cat in get_categories():
+                if st.session_state.master_scores.at[cat, p] == "":
+                    st.session_state.master_scores.at[cat, p] = str(random.randint(0, 30))
+
+        st.session_state.game_active = False
+        st.session_state.game_over = True
+        st.session_state.celebration_done = False
+        st.rerun()
 
 # =========================================================
 # 8. GAME OVER CHECK
