@@ -405,18 +405,29 @@ if st.session_state.game_active and not st.session_state.game_over:
         and st.session_state.trick_a_category != st.session_state.trick_b_category
     )
 
-    if not ready_to_confirm:
-        if len(trick_a_vals) < 5 or len(trick_b_vals) < 5:
-            st.info("Choose 5 dice for Trick A and 5 dice for Trick B.")
-        else:
-            st.info("Choose a different category for each trick before confirming.")
+    # --- Dynamic button text ---
+    if len(trick_a_vals) < 5 or len(trick_b_vals) < 5:
+        confirm_label = "Select 5 dice for Trick A and Trick B"
+        ready = False
+    elif (
+        st.session_state.trick_a_category == ""
+        or st.session_state.trick_b_category == ""
+    ):
+        confirm_label = "Choose categories for both tricks"
+        ready = False
+    elif st.session_state.trick_a_category == st.session_state.trick_b_category:
+        confirm_label = "Choose different categories"
+        ready = False
+    else:
+        confirm_label = "✅ Confirm Turn"
+        ready = True
 
     if st.button(
-        "Confirm Turn",
+        confirm_label,
         key="confirm_turn_btn",
         type="primary",
         use_container_width=True,
-        disabled=not ready_to_confirm
+        disabled=not ready
     ):
         cat_a = st.session_state.trick_a_category
         cat_b = st.session_state.trick_b_category
